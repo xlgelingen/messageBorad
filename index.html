@@ -1,11 +1,207 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MessageBorad</title>
+    <title>myMessageBorad</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .card-list-container {
+            position: relative;
+            width: 800px;
+            height: 400px;
+            background: #f5f5f5;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .card-item {
+            position: absolute;
+            height: 100px;
+            width: 100px;
+            background-color: #ccc;
+            padding: 10px;
+            color: #fff;
+        }
+    </style>
 </head>
+
 <body>
-    
+    <div style="height:400px;"></div>
+    <div class="card-list-container" id="card-list">
+        <div class="card-item"  style="top:50px;left: 50px;">haha</div>
+    </div>
+    <div style="height:400px;"></div>
+
+    <script>
+
+        let cardList = [{ name: 'Jax' }, { name: 'Joye' }, { name: 'Jimmy' }, { name: 'Jay' }];
+        let backgroundColors = ['#f50', '#2db7f5', '#87d068', '#108ee9'];
+
+        const PAGE = {
+            data: {
+                //backgroundColors 卡片背景色
+                backgroundColors: backgroundColors,
+                //defaultDatas 卡片内容数据
+                defaultDatas: cardList,
+                //itemWidth 卡片宽度
+                itemWidth: 100,
+                //itemHeight 卡片高度
+                itemHeight: 100,
+                //paddingOffset 卡片移动距离边缘的距离
+                paddingOffset: 50,
+                //zIndex:  卡片层级
+                zIndex: 0,
+                //item:  当前点击/移动的卡片元素
+                item: null,
+                //itemOffsetTop   卡片距离顶部的距离
+                itemOffsetTop: null,
+                //itemOffsetLeft  卡片距离左部的距离
+                itemOffsetLeft: null,
+                //pageX   鼠标点击X轴位置
+                pageX: null,
+                //pageY  鼠标点击Y轴位置
+                pageY: null,
+                //isLock  事件锁
+                isLock: true,
+            },
+
+            init: function () {
+                //1.随机添加内容 1.3 在 PAGE.init 中调用 PAGE.setDefaultData
+                this.setDefaultData();
+
+                this.bind();
+            },
+
+            bind: function () {
+                //2.鼠标点击存储数据并开锁 2.2委托 card-list 绑定点击 card-item 触发 PAGE.handleMouseDown
+                let cardList = document.getElementById('card-list');
+                this.onEventListener(cardList, 'mousedown', 'card-item', this.handleMouseDown);
+
+                //3.鼠标移动根据前后数据移动卡片 3.1为 window 绑定鼠标移动事件触发 PAGE.handleMouseMove
+                window.addEventListener('mousemove', this.handleMouseMove);
+
+                //4.鼠标回弹清除数据并关锁 4.1为 window 绑定鼠标回弹触发 PAGE.handleMouseMove
+                window.addEventListener('mouseup', this.handleMouseUp);
+
+            },
+
+            //1.随机添加内容 1.1创建 PAGE.setDefaultData 方法用于设置所有卡片
+            setDefaultData : function(){
+                //1.4获取 PAGE.data.defaultDatas 循环调用 PAGE.addCart
+                PAGE.data.defaultDatas.forEach(data => PAGE.addCard(data.name));
+            },
+
+            //1.随机添加内容 1.2 创建 PAGE.addCard 方法用于设置单个卡片
+            addCard: function(name){
+                //1.5 获取 card-list 卡片容器元素的高度、宽度
+                let cardList = document.getElementById('card-list');
+                let containerWidth = cardList.offsetWidth;
+                let containerHeight = cardList.offsetHeight;
+                //1.6  从 PAGE.data 中获取卡片项目的宽度、高度、以及距离边框的距离值
+                let itemWidth = PAGE.data.itemWidth;
+                let itemHeight = PAGE.data.itemHeight;
+                let paddingOffset = PAGE.data.paddingOffset
+                //1.7 根据容器、项目、距边框距离计算出卡片距离顶部以及左部的最大偏移值
+                let maxWidth = containerWidth - itemWidth - paddingOffset;
+                let maxHeight = containerHeight - itemHeight - paddingOffset;
+                //1.9 调用 PAGE.randomBetween 获取距离容器边缘顶部、左部偏移值的随机数
+                let randomLeft = PAGE.randomBetween(paddingOffset,maxWidth);
+                let randomTop = PAGE.randomBetween(paddingOffset, maxHeight);
+                //1.10 设置 PAGE.data.zIndex 增加一级，并获取增加后的值
+                let zIndex = ++PAGE.data.zIndex;
+                //1.11 根据 zIndex 除余按顺序获取背景色的值
+                let backgroundColors = PAGE.data.backgroundColors;
+                let backgroundColor = backgroundColors[zIndex%backgroundColors.length];
+                //1.12  创建新的卡片元素 card-item 并为其赋值，设置 className 及样式属性
+                let cardItem = document.createElement('div');
+                cardItem.className = 'card-item';
+                cardItem.innerText = name;
+                let styleStr = `
+                    z-index : ${zIndex};
+                    background : ${backgroundColor};
+                    top : ${randomTop}px;
+                    left : ${randomLeft}px;
+                `;
+                cardItem.setAttribute('style', styleStr);
+                //1.13  把新创建的元素添加到 card-list 中
+                cardList.appendChild(cardItem);
+
+            },
+
+            //1.随机添加内容 1.8 创建 PAGE.randomBetween 随机数方法，接受两个参数，返回两参数之间的随机数
+            randomBetween : function(min,max){
+                return Math.floor(Math.random()*(max-min)+min);
+            },
+
+            //2.鼠标点击存储数据并开锁 2.1添加 PAGE.onEventLister 委托绑定方法
+            onEventListener: function(parentNode, action, childClassName, callback){
+                parentNode.addEventListener(action, function(e){
+                    e.target.className.indexOf(childClassName)>=0 && callback(e);
+                });
+            },
+
+            //2.鼠标点击存储数据并开锁 2.3添加 PAGE.handleMouseDown 事件
+            handleMouseDown : function(e){
+                //2.4 获取当前点击的元素，为其层级设置到当前最高
+                let item = e.target;
+                item.style.zIndex = ++PAGE.data.zIndex;
+                //2.5 获取当前元素内容距离容器顶部、左部的偏移量、以及鼠标点击的XY坐标轴数据，存储到 PAGE.data 中
+                PAGE.data.itemOffsetLeft = item.offsetLeft;
+                PAGE.data.itemOffsetTop = item.offsetTop;
+                PAGE.data.pageX = e.pageX;
+                PAGE.data.pageY = e.pageY;
+                //2.6 存储当前点击元素
+                PAGE.data.item = item;
+                //2.7 开锁
+                PAGE.data.isLock = false;
+
+            },
+
+            //3.鼠标移动根据前后数据移动卡片 3.2定义 PAGE.handleMouseMove 当鼠标移动触发的事件
+            handleMouseMove: function(e){
+                //3.3 如果当前锁为开的状态执行以下代码
+                if(!PAGE.data.isLock){
+                    //3.4获取容器、卡片项目的宽高和距离容器边缘的偏移量，计算出最大值
+                    let cardList = document.getElementById('card-list');
+                    let containerWidth = cardList.offsetWidth;
+                    let containerHeight = cardList.offsetHeight;
+                    let itemHeight = PAGE.data.itemHeight;
+                    let itemWidth = PAGE.data.itemWidth;
+                    let paddingOffset = PAGE.data.paddingOffset;
+                    let maxWidth = containerWidth - itemWidth - paddingOffset;
+                    let maxHeight = containerHeight - itemHeight - paddingOffset;
+                    //3.5 根据当前鼠标坐标与存储鼠标坐标对比计算出偏移量，进而计算出卡片的距离边缘偏移量
+                    let translateX = e.pageX - PAGE.data.pageX + PAGE.data.itemOffsetLeft;
+                    let translateY = e.pageY - PAGE.data.pageY + PAGE.data.itemOffsetTop;
+                    //3.6 设置偏移量的最大和最小值，最大不超过最大值，最少不少于边缘值。
+                    translateX = translateX > maxWidth ? maxWidth : translateX;
+                    translateX = translateX < paddingOffset ? paddingOffset : translateX;
+                    translateY = translateY > maxHeight ? maxHeight : translateY;
+                    translateY = translateY < paddingOffset ? paddingOffset : translateY;
+                    //3.7 为存储的元素设置偏移值
+                    PAGE.data.item.style.left = translateX + 'px';
+                    PAGE.data.item.style.top = translateY + 'px';
+                }
+
+            },
+
+            //4.鼠标回弹关锁 4.2创建PAGE.handleMouseUp 当鼠标回弹触发的事件
+            handleMouseUp: function(e){
+                //4.3 设置关锁，这样鼠标移动时候的事件就不会触发了
+                PAGE.data.isLock = true;
+            },
+
+        }
+
+        PAGE.init();
+    </script>
 </body>
+
 </html>
